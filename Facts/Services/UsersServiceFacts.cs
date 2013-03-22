@@ -11,7 +11,8 @@ namespace NuGetGallery
             Mock<IConfiguration> config = null,
             Mock<ICryptographyService> cryptoService = null,
             Mock<IEntityRepository<User>> userRepo = null,
-            Action<Mock<UserService>> setup = null)
+            Action<Mock<UserService>> setup = null,
+            Mock<IEntityRepository<UserFollowsPackage>> followRepo = null)
         {
             if (config == null)
             {
@@ -20,11 +21,13 @@ namespace NuGetGallery
             }
             cryptoService = cryptoService ?? new Mock<ICryptographyService>();
             userRepo = userRepo ?? new Mock<IEntityRepository<User>>();
+            followRepo = followRepo ?? new Mock<IEntityRepository<UserFollowsPackage>>();
 
             var userService = new Mock<UserService>(
                 config.Object,
                 cryptoService.Object,
-                userRepo.Object);
+                userRepo.Object,
+                followRepo.Object);
 
             userService.CallBase = true;
 

@@ -9,15 +9,18 @@ namespace NuGetGallery
         private readonly ICryptographyService _cryptoService;
         private readonly IConfiguration _config;
         private readonly IEntityRepository<User> _userRepository;
+        private readonly IEntityRepository<UserFollowsPackage> _followsRepository;
 
         public UserService(
             IConfiguration config,
             ICryptographyService cryptoService,
-            IEntityRepository<User> userRepository)
+            IEntityRepository<User> userRepository,
+            IEntityRepository<UserFollowsPackage> followsRepository)
         {
             _config = config;
             _cryptoService = cryptoService;
             _userRepository = userRepository;
+            _followsRepository = followsRepository;
         }
 
         public virtual User Create(
@@ -149,7 +152,8 @@ namespace NuGetGallery
             {
                 return null;
             }
-            else if (!user.PasswordHashAlgorithm.Equals(Constants.PBKDF2HashAlgorithmId, StringComparison.OrdinalIgnoreCase))
+            
+            if (!user.PasswordHashAlgorithm.Equals(Constants.PBKDF2HashAlgorithmId, StringComparison.OrdinalIgnoreCase))
             {
                 // If the user can be authenticated and they are using an older password algorithm, migrate them to the current one.
                 ChangePasswordInternal(user, password);
@@ -279,6 +283,51 @@ namespace NuGetGallery
             var hashedPassword = _cryptoService.GenerateSaltedHash(newPassword, Constants.PBKDF2HashAlgorithmId);
             user.PasswordHashAlgorithm = Constants.PBKDF2HashAlgorithmId;
             user.HashedPassword = hashedPassword;
+        }
+
+        public void Follow(User user, PackageRegistration package, bool saveChanges)
+        {
+            UserFollowsPackage follow = _followsRepository.GetAll()
+                .FirstOrDefault(ufp => ufp.UserKey == user.Key && ufp.PackageRegistrationKey == package.Key);
+
+            if (follow == null)
+            {
+                follow = UserFollowsPackage.Create(user, package);
+                _followsRepository.InsertOnCommit(follow);
+            }
+
+            follow.IsFollowed = true;
+            follow.LastModified = DateTime.UtcNow;
+
+            if (saveChanges)
+            {
+                _followsRepository.CommitChanges();
+            }
+        }
+
+        public void Unfollow(User user, PackageRegistration package, bool saveChanges)
+        {
+            UserFollowsPackage follow = _followsRepository.GetAll()
+                .FirstOrDefault(ufp => ufp.UserKey == user.Key && ufp.PackageRegistrationKey == package.Key);
+
+            if (follow == null)
+            {
+                return; // unfollowing something you never followed is a no-op 
+            }
+
+            follow.IsFollowed = false;
+            follow.LastModified = DateTime.UtcNow;
+
+            if (saveChanges)
+            {
+                _followsRepository.CommitChanges();
+            }
+        }
+
+        public bool IsFollowing(User user, PackageRegistration package)
+        {
+            return _followsRepository.GetAll()
+                .Any(ufp => ufp.UserKey == user.Key && ufp.PackageRegistrationKey == package.Key);
         }
     }
 }
