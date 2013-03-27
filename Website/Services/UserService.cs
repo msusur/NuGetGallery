@@ -11,17 +11,20 @@ namespace NuGetGallery
         private readonly IConfiguration _config;
         private readonly IEntityRepository<User> _userRepository;
         private readonly IEntityRepository<UserFollowsPackage> _followsRepository;
+        private readonly IEntityRepository<PackageRegistration> _packagesRepository;
 
         public UserService(
             IConfiguration config,
             ICryptographyService cryptoService,
             IEntityRepository<User> userRepository,
-            IEntityRepository<UserFollowsPackage> followsRepository)
+            IEntityRepository<UserFollowsPackage> followsRepository,
+            IEntityRepository<PackageRegistration> packagesRepository)
         {
             _config = config;
             _cryptoService = cryptoService;
             _userRepository = userRepository;
             _followsRepository = followsRepository;
+            _packagesRepository = packagesRepository;
         }
 
         public virtual User Create(
@@ -327,26 +330,33 @@ namespace NuGetGallery
 
         public bool IsFollowing(User user, PackageRegistration package)
         {
-            return _followsRepository.GetAll()
-                .Any(ufp => ufp.UserKey == user.Key && ufp.PackageRegistrationKey == package.Key);
+            var userFollowPackage = _followsRepository.GetAll()
+                .FirstOrDefault(ufp => ufp.UserKey == user.Key && ufp.PackageRegistrationKey == package.Key);
+
+            if (userFollowPackage == null)
+            {
+                return false;
+            }
+
+            return userFollowPackage.IsFollowed;
         }
 
-        public IEnumerable<Package> GetFollowedPackagesInSet(User user, IEnumerable<Package> packages)
+        public IEnumerable<string> GetFollowedPackageIdsInSet(User user, IEnumerable<string> packageIds)
         {
             if (user == null)
             {
                 throw new ArgumentNullException("user");
             }
 
-            int[] keys = packages.Select(p => p.PackageRegistrationKey).ToArray();
-            var follows = _followsRepository
+            var packageIdSet = packageIds.ToArray();
+
+            var followedIds = _followsRepository
                 .GetAll()
-                .Where(ufp =>
-                       ufp.UserKey == user.Key && keys.Contains(ufp.PackageRegistrationKey));
+                .Include(ufp => ufp.PackageRegistration)
+                .Where(ufp => ufp.UserKey == user.Key && packageIdSet.Contains(ufp.PackageRegistration.Id))
+                .Select(ufp => ufp.PackageRegistration.Id);
 
-            var filteredKeys = new HashSet<int>(follows.Select(ufp => ufp.PackageRegistrationKey));
-
-            return packages.Where(p => filteredKeys.Contains(p.PackageRegistrationKey)).ToArray();
+            return followedIds.ToList();
         }
     }
 }
