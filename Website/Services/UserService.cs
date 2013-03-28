@@ -353,7 +353,10 @@ namespace NuGetGallery
             var followedIds = _followsRepository
                 .GetAll()
                 .Include(ufp => ufp.PackageRegistration)
-                .Where(ufp => ufp.UserKey == user.Key && packageIdSet.Contains(ufp.PackageRegistration.Id))
+                .Where(
+                    ufp => ufp.UserKey == user.Key && 
+                    ufp.IsFollowed &&
+                    packageIdSet.Contains(ufp.PackageRegistration.Id))
                 .Select(ufp => ufp.PackageRegistration.Id);
 
             return followedIds.ToList();
