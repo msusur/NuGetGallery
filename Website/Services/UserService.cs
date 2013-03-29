@@ -11,20 +11,17 @@ namespace NuGetGallery
         private readonly IConfiguration _config;
         private readonly IEntityRepository<User> _userRepository;
         private readonly IEntityRepository<UserFollowsPackage> _followsRepository;
-        private readonly IEntityRepository<PackageRegistration> _packagesRepository;
 
         public UserService(
             IConfiguration config,
             ICryptographyService cryptoService,
             IEntityRepository<User> userRepository,
-            IEntityRepository<UserFollowsPackage> followsRepository,
-            IEntityRepository<PackageRegistration> packagesRepository)
+            IEntityRepository<UserFollowsPackage> followsRepository)
         {
             _config = config;
             _cryptoService = cryptoService;
             _userRepository = userRepository;
             _followsRepository = followsRepository;
-            _packagesRepository = packagesRepository;
         }
 
         public virtual User Create(
