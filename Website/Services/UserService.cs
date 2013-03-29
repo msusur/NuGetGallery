@@ -361,5 +361,16 @@ namespace NuGetGallery
 
             return followedIds.ToList();
         }
+
+        public IQueryable<UserFollowsPackage> GetFollowedPackages(User user)
+        {
+            if (user == null)
+            {
+                throw new ArgumentNullException("user");
+            }
+
+            return _followsRepository.GetAll()
+                .Where(ufp => ufp.UserKey == user.Key);
+        }
     }
 }
