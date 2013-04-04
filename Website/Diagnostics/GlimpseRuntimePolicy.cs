@@ -21,7 +21,7 @@ namespace NuGetGallery.Diagnostics
 
         public RuntimeEvent ExecuteOn
         {
-            get { return RuntimeEvent.BeginSessionAccess | RuntimeEvent.ExecuteResource; }
+            get { return RuntimeEvent.BeginSessionAccess; }
         }
 
         public RuntimePolicy Execute(IRuntimePolicyContext policyContext)
