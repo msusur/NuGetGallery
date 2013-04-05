@@ -10,6 +10,7 @@ namespace NuGetGallery
         public ICryptographyService Crypto { get; protected set; }
         public IConfiguration Config { get; protected set; }
         public IEntityRepository<User> UserRepository { get; protected set; }
+        public IEntityRepository<UserFollowsPackage> FollowsRepository { get; protected set; }
 
         protected UserService() {}
 
@@ -289,13 +290,13 @@ namespace NuGetGallery
 
         public void Follow(User user, PackageRegistration package, bool saveChanges)
         {
-            UserFollowsPackage follow = _followsRepository.GetAll()
+            UserFollowsPackage follow = FollowsRepository.GetAll()
                 .FirstOrDefault(ufp => ufp.UserKey == user.Key && ufp.PackageRegistrationKey == package.Key);
 
             if (follow == null)
             {
                 follow = UserFollowsPackage.Create(user, package);
-                _followsRepository.InsertOnCommit(follow);
+                FollowsRepository.InsertOnCommit(follow);
             }
 
             follow.IsFollowed = true;
@@ -303,13 +304,13 @@ namespace NuGetGallery
 
             if (saveChanges)
             {
-                _followsRepository.CommitChanges();
+                FollowsRepository.CommitChanges();
             }
         }
 
         public void Unfollow(User user, PackageRegistration package, bool saveChanges)
         {
-            UserFollowsPackage follow = _followsRepository.GetAll()
+            UserFollowsPackage follow = FollowsRepository.GetAll()
                 .FirstOrDefault(ufp => ufp.UserKey == user.Key && ufp.PackageRegistrationKey == package.Key);
 
             if (follow == null)
@@ -322,13 +323,13 @@ namespace NuGetGallery
 
             if (saveChanges)
             {
-                _followsRepository.CommitChanges();
+                FollowsRepository.CommitChanges();
             }
         }
 
         public bool IsFollowing(User user, PackageRegistration package)
         {
-            var userFollowPackage = _followsRepository.GetAll()
+            var userFollowPackage = FollowsRepository.GetAll()
                 .FirstOrDefault(ufp => ufp.UserKey == user.Key && ufp.PackageRegistrationKey == package.Key);
 
             if (userFollowPackage == null)
@@ -348,7 +349,7 @@ namespace NuGetGallery
 
             var packageIdSet = packageIds.ToArray();
 
-            var followedIds = _followsRepository
+            var followedIds = FollowsRepository
                 .GetAll()
                 .Include(ufp => ufp.PackageRegistration)
                 .Where(
@@ -367,7 +368,7 @@ namespace NuGetGallery
                 throw new ArgumentNullException("user");
             }
 
-            return _followsRepository.GetAll()
+            return FollowsRepository.GetAll()
                 .Where(ufp => ufp.UserKey == user.Key);
         }
     }
