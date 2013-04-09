@@ -237,6 +237,11 @@ namespace NuGetGallery
             }
         }
 
+        public bool SmtpEnableSsl
+        {
+            get { return ReadAppSettings("Smtp.EnableSsl",(val)=>bool.Parse(val ?? bool.TrueString)); }
+        }
+
         protected virtual string GetConfiguredSiteRoot()
         {
             return ReadAppSettings("SiteRoot");

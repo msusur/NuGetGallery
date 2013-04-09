@@ -153,7 +153,7 @@ namespace NuGetGallery
                                     DeliveryMethod = SmtpDeliveryMethod.Network,
                                     Host = settings.SmtpHost,
                                     Port = settings.SmtpPort,
-                                    EnableSsl = true
+                                    EnableSsl = settings.SmtpEnableSsl
                                 };
 
                             if (!String.IsNullOrWhiteSpace(settings.SmtpUsername))

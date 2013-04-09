@@ -16,6 +16,8 @@
         bool ConfirmEmailAddresses { get; }
         string EnvironmentName { get; }
 
+        bool SmtpEnableSsl { get; }
+
         string AzureDiagnosticsConnectionString { get; }
         string AzureStorageConnectionString { get; }
         string AzureStatisticsConnectionString { get; }
@@ -31,7 +33,10 @@
         string SqlConnectionString { get; }
 
         string GetSiteRoot(bool useHttps);
+        
 
         bool ReadOnlyMode { get; }
+
+        
     }
 }
